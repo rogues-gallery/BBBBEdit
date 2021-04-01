@@ -10,15 +10,19 @@ import {
   Descendant,
   NodeEntry,
   Path,
-  Transforms,
+  Ancestor,
 } from '..'
 
-export const GeneralTransforms = {
+export interface GeneralTransforms {
+  transform: (editor: Editor, op: Operation) => void
+}
+
+export const GeneralTransforms: GeneralTransforms = {
   /**
    * Transform the editor by an operation.
    */
 
-  transform(editor: Editor, op: Operation) {
+  transform(editor: Editor, op: Operation): void {
     editor.children = createDraft(editor.children)
     let selection = editor.selection && createDraft(editor.selection)
 
@@ -68,7 +72,7 @@ export const GeneralTransforms = {
           prev.children.push(...node.children)
         } else {
           throw new Error(
-            `Cannot apply a "merge_node" operation at path [${path}] to nodes of different interaces: ${node} ${prev}`
+            `Cannot apply a "merge_node" operation at path [${path}] to nodes of different interfaces: ${node} ${prev}`
           )
         }
 
@@ -104,7 +108,7 @@ export const GeneralTransforms = {
         // the operation was applied.
         parent.children.splice(index, 1)
         const truePath = Path.transform(path, op)!
-        const newParent = Node.get(editor, Path.parent(truePath))
+        const newParent = Node.get(editor, Path.parent(truePath)) as Ancestor
         const newIndex = truePath[truePath.length - 1]
 
         newParent.children.splice(newIndex, 0, node)
@@ -208,18 +212,32 @@ export const GeneralTransforms = {
 
         if (newProperties == null) {
           selection = newProperties
-        } else if (selection == null) {
-          if (!Range.isRange(newProperties)) {
-            throw new Error(
-              `Cannot apply an incomplete "set_selection" operation properties ${JSON.stringify(
-                newProperties
-              )} when there is no current selection.`
-            )
+        } else {
+          if (selection == null) {
+            if (!Range.isRange(newProperties)) {
+              throw new Error(
+                `Cannot apply an incomplete "set_selection" operation properties ${JSON.stringify(
+                  newProperties
+                )} when there is no current selection.`
+              )
+            }
+
+            selection = { ...newProperties }
           }
 
-          selection = newProperties
-        } else {
-          Object.assign(selection, newProperties)
+          for (const key in newProperties) {
+            const value = newProperties[key]
+
+            if (value == null) {
+              if (key === 'anchor' || key === 'focus') {
+                throw new Error(`Cannot remove the "${key}" selection property`)
+              }
+
+              delete selection[key]
+            } else {
+              selection[key] = value
+            }
+          }
         }
 
         break
@@ -244,7 +262,6 @@ export const GeneralTransforms = {
           const after = node.text.slice(position)
           node.text = before
           newNode = {
-            ...node,
             ...(properties as Partial<Text>),
             text: after,
           }
@@ -254,7 +271,6 @@ export const GeneralTransforms = {
           node.children = before
 
           newNode = {
-            ...node,
             ...(properties as Partial<Element>),
             children: after,
           }
@@ -272,7 +288,7 @@ export const GeneralTransforms = {
       }
     }
 
-    editor.children = finishDraft(editor.children) as Node[]
+    editor.children = finishDraft(editor.children)
 
     if (selection) {
       editor.selection = isDraft(selection)

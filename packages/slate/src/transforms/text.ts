@@ -11,7 +11,38 @@ import {
   Transforms,
 } from '..'
 
-export const TextTransforms = {
+export interface TextTransforms {
+  delete: (
+    editor: Editor,
+    options?: {
+      at?: Location
+      distance?: number
+      unit?: 'character' | 'word' | 'line' | 'block'
+      reverse?: boolean
+      hanging?: boolean
+      voids?: boolean
+    }
+  ) => void
+  insertFragment: (
+    editor: Editor,
+    fragment: Node[],
+    options?: {
+      at?: Location
+      hanging?: boolean
+      voids?: boolean
+    }
+  ) => void
+  insertText: (
+    editor: Editor,
+    text: string,
+    options?: {
+      at?: Location
+      voids?: boolean
+    }
+  ) => void
+}
+
+export const TextTransforms: TextTransforms = {
   /**
    * Delete content in the editor.
    */
@@ -26,7 +57,7 @@ export const TextTransforms = {
       hanging?: boolean
       voids?: boolean
     } = {}
-  ) {
+  ): void {
     Editor.withoutNormalizing(editor, () => {
       const {
         reverse = false,
@@ -70,7 +101,12 @@ export const TextTransforms = {
       }
 
       if (!hanging) {
-        at = Editor.unhangRange(editor, at, { voids })
+        const [, end] = Range.edges(at)
+        const endOfDoc = Editor.end(editor, [])
+
+        if (!Point.equals(end, endOfDoc)) {
+          at = Editor.unhangRange(editor, at, { voids })
+        }
       }
 
       let [start, end] = Range.edges(at)
@@ -176,7 +212,9 @@ export const TextTransforms = {
         })
       }
 
-      const point = endRef.unref() || startRef.unref()
+      const point = reverse
+        ? startRef.unref() || endRef.unref()
+        : endRef.unref() || startRef.unref()
 
       if (options.at == null && point) {
         Transforms.select(editor, point)
@@ -196,7 +234,7 @@ export const TextTransforms = {
       hanging?: boolean
       voids?: boolean
     } = {}
-  ) {
+  ): void {
     Editor.withoutNormalizing(editor, () => {
       const { hanging = false, voids = false } = options
       let { at = editor.selection } = options
@@ -410,7 +448,7 @@ export const TextTransforms = {
       at?: Location
       voids?: boolean
     } = {}
-  ) {
+  ): void {
     Editor.withoutNormalizing(editor, () => {
       const { voids = false } = options
       let { at = editor.selection } = options

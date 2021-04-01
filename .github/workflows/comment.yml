@@ -1,0 +1,23 @@
+# https://github.com/marketplace/actions/automatic-rebase  (https://github.com/cirrus-actions/rebase)
+name: Comment Automation
+
+on:
+  issue_comment:
+    types:
+      - created
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request != '' && startsWith(github.event.comment.body, '/rebase')
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Rebase PR
+        uses: cirrus-actions/rebase@1.3.1

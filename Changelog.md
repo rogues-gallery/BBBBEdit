@@ -1,14 +1,55 @@
 # Changelog
 
-This is a list of changes to Slate with each new release. Until `1.0.0` is released, breaking changes will be added as minor version bumps, and smaller, patch-level changes won't be noted since the library is moving quickly while in beta.
+This is a list of changes to Slate with each new release. Until `1.0` is released, breaking changes will be added as minor version bumps, and smaller, patch-level changes won't be noted since the library is moving quickly while in beta.
 
 ---
 
-### `0.57.0` — December 18, 2019
+> ⚠️ Until https://github.com/atlassian/changesets/issues/264 is solved, each package will maintain its own individual changelog, which you can find here:
+>
+> - [slate](./packages/slate/CHANGELOG.md)
+> - [slate-history](./packages/slate-history/CHANGELOG.md)
+> - [slate-hyperscript](./packages/slate-hyperscript/CHANGELOG.md)
+> - [slate-react](./packages/slate-react/CHANGELOG.md)
+
+---
+
+### `0.61` — March 29, 2021
 
 ###### BREAKING
 
-**Overrideble commands now live directly on the editor object.** Previously the `Command` concept was implemented as an interface that was passed into the `editor.exec` function, allowing the "core" commands to be overriden in one place. But this introduced a lot of Redux-like indirection when implementing custom commands that wasn't necessary because they are never overridden. Instead, now the core actions that can be overridden are implemented as individual functions on the editor (eg. `editor.insertText`) and they can be overridden just like any other function (eg. `isVoid`).
+**New CustomTypes for Editor, Element, Text and other implementation specific objects.** Improved typing with TypeScript lets you add CustomTypes for the Slate Editor. This change requires you to set up your types at the start. It's a new concept so please read the new TypeScript documentation here: https://docs.slatejs.org/concepts/11-typescript
+
+---
+
+### `0.60` — November 24, 2020
+
+###### BREAKING
+
+**Introduced new customizable TypeScript typings.** You can override the built-in types to extend them for your own editor's domain model. However the changes to make this possible likely resulted in some changes to the existing type contracts.
+
+**The `useEditor` hook was renamed to `useSlateStatic`.** This was done to better differentiate between the `useSlate` hook and to make it clear that the static version will not re-render when changes occur.
+
+---
+
+### `0.59` — September 24, 2020
+
+_There were no breaking changes or new additions in this release._
+
+---
+
+### `0.58` — May 5th, 2020
+
+###### BREAKING
+
+**User properties on Elements and Texts now have an unknown type instead of any.** Previously, the arbitrary user defined keys on the `Text` and `Element` interface had a type of `any` which effectively removed any potential type checking on those properties. Now these have a type of `unknown` so that type checking can be done by consumers of the API when they are applying their own custom properties to the `Text`s and `Element`s.
+
+---
+
+### `0.57` — December 18, 2019
+
+###### BREAKING
+
+**Overridable commands now live directly on the editor object.** Previously the `Command` concept was implemented as an interface that was passed into the `editor.exec` function, allowing the "core" commands to be overridden in one place. But this introduced a lot of Redux-like indirection when implementing custom commands that wasn't necessary because they are never overridden. Instead, now the core actions that can be overridden are implemented as individual functions on the editor (eg. `editor.insertText`) and they can be overridden just like any other function (eg. `isVoid`).
 
 Previously to override a command you'd do:
 
@@ -68,11 +109,11 @@ Now you'd write:
 Transforms.unwrapNodes(editor, ...)
 ```
 
-**The `Command` interfaces were removed.** As part of those changes, the existing `Command`, `CoreCommand`, `HistoryCommand`, and `ReactCommand` interfaces were all removed. You no longer need to define these "command objects", because you can just call the functions directly. Plugins can still define their own overridable commands by existing the `Editor` interface with new functions. The `slate-react` plugin does this with `insertData` and the `slate-history` plugin does this with `undo` and `redo`.
+**The `Command` interfaces were removed.** As part of those changes, the existing `Command`, `CoreCommand`, `HistoryCommand`, and `ReactCommand` interfaces were all removed. You no longer need to define these "command objects", because you can just call the functions directly. Plugins can still define their own overridable commands by extending the `Editor` interface with new functions. The `slate-react` plugin does this with `insertData` and the `slate-history` plugin does this with `undo` and `redo`.
 
 ###### NEW
 
-**User actions helpers now live directly on the `Editor.*` interface.** These are taking the place of the existing `Transforms.*` helpers that were moved. These helpers are equivalent to user actions, and they always operate on the existing selection. There are some defined by core, but you are likely to define your own custom helpers that are specific to your domain as well.
+**User action helpers now live directly on the `Editor.*` interface.** These are taking the place of the existing `Transforms.*` helpers that were moved. These helpers are equivalent to user actions, and they always operate on the existing selection. There are some defined by core, but you are likely to define your own custom helpers that are specific to your domain as well.
 
 For example, here are some of the built-in actions:
 
@@ -101,11 +142,11 @@ Whatever makes sense for your specific use case!
 
 ---
 
-### `0.56.0` — December 17, 2019
+### `0.56` — December 17, 2019
 
 ###### BREAKING
 
-**The `format_text` command is split into `add_mark` and `remove_mark`.** Although the goal is to keep the number of commands in core to a minimum, having this as a combined command made it very hard to write logic that wanted to guarantee to only ever add or remove a mark from a text node. Now you can be guaranteed that the `add_mark` command will only ever add a custom property to text nodes, and the `remove_mark` command will only ever remove them.
+**The `format_text` command is split into `add_mark` and `remove_mark`.** Although the goal is to keep the number of commands in core to a minimum, having this as a combined command made it very hard to write logic that wanted to guarantee to only ever add or remove a mark from a text node. Now you can be guaranteed that the `add_mark` command will only ever add custom properties to text nodes, and the `remove_mark` command will only ever remove them.
 
 Previously you would write:
 
@@ -126,13 +167,13 @@ if (isActive) {
 }
 ```
 
-> 🤖 Note that the "mark" term does not mean what it meant in `0.47` and earlier. It simply means formatting that is applied at the text level—bold, italic, etc. We need a term for it because it's such a common pattern in richtext editor, and "mark" is often the term that is used. For example the `<mark>` tag in HTML.
+> 🤖 Note that the "mark" term does not mean what it meant in `0.47` and earlier. It simply means formatting that is applied at the text level—bold, italic, etc. We need a term for it because it's such a common pattern in richtext editors, and "mark" is often the term that is used. For example the `<mark>` tag in HTML.
 
 **The `Node.text` helper was renamed to `Node.string`.** This was simply to reduce the confusion between "the text string" and "text nodes". The helper still just returns the concatenated string content of a node.
 
 ---
 
-### `0.55.0` — December 15, 2019
+### `0.55` — December 15, 2019
 
 ###### BREAKING
 
@@ -202,7 +243,7 @@ Editor.nodes(editor, {
 
 ---
 
-### `0.54.0` — December 12, 2019
+### `0.54` — December 12, 2019
 
 ###### BREAKING
 
@@ -220,11 +261,11 @@ Editor.nodes(editor, {
 
 ---
 
-### `0.53.0` — December 10, 2019
+### `0.53` — December 10, 2019
 
 ###### BREAKING
 
-**The `slate-schema` package has been removed!** This decision was made because with the new helpers on the `Editor.*` interface, and with the changes to `normalizeNode` in the latest version of Slate, adding constraints using `normalizeNode` actually leads to more maintainable code that using `slate-schema`. Previously it was required to keep things from getting too unreadable, but that always came at a large cost of indirection and learning additional APIs. Everything you could do with `slate-schema` you can do with `normalizeNode`, and more.
+**The `slate-schema` package has been removed!** This decision was made because with the new helpers on the `Editor.*` interface, and with the changes to `normalizeNode` in the latest version of Slate, adding constraints using `normalizeNode` actually leads to more maintainable code than using `slate-schema`. Previously it was required to keep things from getting too unreadable, but that always came at a large cost of indirection and learning additional APIs. Everything you could do with `slate-schema` you can do with `normalizeNode`, and more.
 
 **Node matching functions now receive just a `Node`.** Previously they received a `NodeEntry` tuple, which consisted of `[node, path]`. However now they receive only a `node` argument, which makes it easier to write one-off node-checking helpers and pass them in directly as arguments. If you need to ensure a path, lookup the node first.
 
@@ -239,7 +280,7 @@ Editor.nodes(editor, {
 
 ---
 
-### `0.52.0` — December 5, 2019
+### `0.52` — December 5, 2019
 
 ###### BREAKING
 
@@ -253,7 +294,7 @@ Editor.nodes(editor, {
 
 ---
 
-### `0.51.0` — December 5, 2019
+### `0.51` — December 5, 2019
 
 ###### BREAKING
 
@@ -305,7 +346,7 @@ const [selection, setSelection] = useState(null)
 
 ---
 
-### `0.50.0` — November 27, 2019
+### `0.50` — November 27, 2019
 
 ###### BREAKING
 
@@ -317,7 +358,7 @@ const [selection, setSelection] = useState(null)
 
 ---
 
-### `0.47.0` — May 8, 2019
+### `0.47` — May 8, 2019
 
 ###### NEW
 
@@ -385,7 +426,7 @@ And because these iterations use native `for/of` loops, you can easily `break` o
 
 ---
 
-### `0.46.0` — May 1, 2019
+### `0.46` — May 1, 2019
 
 ###### BREAKING
 
@@ -431,7 +472,7 @@ Text.create(oldTextJson)
 
 ---
 
-### `0.45.0` — April 2, 2019
+### `0.45` — April 2, 2019
 
 ###### BREAKING
 
@@ -439,7 +480,7 @@ Text.create(oldTextJson)
 
 ---
 
-### `0.44.0` — November 8, 2018
+### `0.44` — November 8, 2018
 
 ###### NEW
 
@@ -457,7 +498,7 @@ Text.create(oldTextJson)
 
 ---
 
-### `0.43.0` — October 27, 2018
+### `0.43` — October 27, 2018
 
 ###### NEW
 
@@ -510,7 +551,7 @@ editor
 
 ---
 
-### `0.42.0` — October 9, 2018
+### `0.42` — October 9, 2018
 
 ###### NEW
 
@@ -695,7 +736,7 @@ While this seems inconvenient, it makes the boundaries in the API much more clea
 
 ---
 
-### `0.41.0` — September 21, 2018
+### `0.41` — September 21, 2018
 
 ###### DEPRECATED
 
@@ -725,7 +766,7 @@ This means that you no longer use the `{ normalize: false }` or `{ save: false }
 
 ---
 
-### `0.40.0` — August 22, 2018
+### `0.40` — August 22, 2018
 
 ###### BREAKING
 
@@ -733,7 +774,7 @@ This means that you no longer use the `{ normalize: false }` or `{ save: false }
 
 ---
 
-### `0.39.0` — August 22, 2018
+### `0.39` — August 22, 2018
 
 ###### NEW
 
@@ -808,7 +849,7 @@ const selection = document.createSelection({
 
 ---
 
-### `0.38.0` — August 21, 2018
+### `0.38` — August 21, 2018
 
 ###### DEPRECATED
 
@@ -834,7 +875,7 @@ This requires you to have a reference to the `schema` object, which can be acces
 
 ---
 
-### `0.37.0` — August 3, 2018
+### `0.37` — August 3, 2018
 
 ###### NEW
 
@@ -1075,7 +1116,7 @@ selectAll -> moveToRangeOfDocument
 
 ---
 
-### `0.36.0` — July 27, 2018
+### `0.36` — July 27, 2018
 
 ###### BREAKING
 
@@ -1152,7 +1193,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.35.0` — July 27, 2018
+### `0.35` — July 27, 2018
 
 ###### NEW
 
@@ -1182,7 +1223,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.34.0` — June 14, 2018
+### `0.34` — June 14, 2018
 
 ###### NEW
 
@@ -1198,7 +1239,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.33.0` — February 21, 2018
+### `0.33` — February 21, 2018
 
 ###### BREAKING
 
@@ -1212,7 +1253,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.32.0` — January 4, 2018
+### `0.32` — January 4, 2018
 
 ###### BREAKING
 
@@ -1222,7 +1263,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.31.0` — November 16, 2017
+### `0.31` — November 16, 2017
 
 ###### NEW
 
@@ -1236,7 +1277,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.30.0` — October 27, 2017
+### `0.30` — October 27, 2017
 
 ###### BREAKING
 
@@ -1244,7 +1285,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.29.0` — October 27, 2017
+### `0.29` — October 27, 2017
 
 ###### NEW
 
@@ -1260,7 +1301,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.28.0` — October 25, 2017
+### `0.28` — October 25, 2017
 
 ###### NEW
 
@@ -1274,7 +1315,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.27.0` — October 14, 2017
+### `0.27` — October 14, 2017
 
 ###### BREAKING
 
@@ -1290,7 +1331,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.26.0` — October 13, 2017
+### `0.26` — October 13, 2017
 
 ###### BREAKING
 
@@ -1310,7 +1351,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.25.0` — September 21, 2017
+### `0.25` — September 21, 2017
 
 ###### BREAKING
 
@@ -1320,7 +1361,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.24.0` — September 11, 2017
+### `0.24` — September 11, 2017
 
 ###### NEW
 
@@ -1342,7 +1383,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.23.0` — September 10, 2017
+### `0.23` — September 10, 2017
 
 ###### NEW
 
@@ -1368,7 +1409,7 @@ This is just an attempt to make dealing with normalization errors slightly more 
 
 ---
 
-### `0.22.0` — September 5, 2017
+### `0.22` — September 5, 2017
 
 ###### NEW
 
@@ -1426,7 +1467,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.21.0` — July 20, 2017
+### `0.21` — July 20, 2017
 
 ###### BREAKING
 
@@ -1434,7 +1475,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.20.0` — May 17, 2017
+### `0.20` — May 17, 2017
 
 ###### BREAKING
 
@@ -1442,7 +1483,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.19.0` — March 3, 2017
+### `0.19` — March 3, 2017
 
 ###### BREAKING
 
@@ -1465,7 +1506,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.18.0` — March 2, 2017
+### `0.18` — March 2, 2017
 
 ###### BREAKING
 
@@ -1473,7 +1514,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.17.0` — February 27, 2017
+### `0.17` — February 27, 2017
 
 ###### DEPRECATED
 
@@ -1506,7 +1547,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.16.0` — December 2, 2016
+### `0.16` — December 2, 2016
 
 ###### BREAKING
 
@@ -1514,7 +1555,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.15.0` - November 17, 2016
+### `0.15` — November 17, 2016
 
 ###### BREAKING
 
@@ -1530,7 +1571,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.14.0` — September 10, 2016
+### `0.14` — September 10, 2016
 
 ###### BREAKING
 
@@ -1544,7 +1585,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.13.0` — August 15, 2016
+### `0.13` — August 15, 2016
 
 ###### BREAKING
 
@@ -1554,7 +1595,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.12.0` — August 9, 2016
+### `0.12` — August 9, 2016
 
 ###### BREAKING
 
@@ -1562,7 +1603,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.11.0` — August 4, 2016
+### `0.11` — August 4, 2016
 
 ###### BREAKING
 
@@ -1570,7 +1611,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.10.0` — July 29, 2016
+### `0.10` — July 29, 2016
 
 ###### BREAKING
 
@@ -1578,7 +1619,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.9.0` — July 28, 2016
+### `0.9` — July 28, 2016
 
 ###### BREAKING
 
@@ -1586,7 +1627,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.8.0` — July 27, 2016
+### `0.8` — July 27, 2016
 
 ###### BREAKING
 
@@ -1600,7 +1641,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.7.0` — July 24, 2016
+### `0.7` — July 24, 2016
 
 ###### BREAKING
 
@@ -1608,7 +1649,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.6.0` — July 22, 2016
+### `0.6` — July 22, 2016
 
 ###### BREAKING
 
@@ -1618,7 +1659,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.5.0` — July 20, 2016
+### `0.5` — July 20, 2016
 
 ###### BREAKING
 
@@ -1628,7 +1669,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.4.0` — July 20, 2016
+### `0.4` — July 20, 2016
 
 ###### BREAKING
 
@@ -1636,7 +1677,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.3.0` — July 20, 2016
+### `0.3` — July 20, 2016
 
 ###### BREAKING
 
@@ -1644,7 +1685,7 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.2.0` — July 18, 2016
+### `0.2` — July 18, 2016
 
 ###### BREAKING
 
@@ -1652,6 +1693,6 @@ function onKeyDown(e, data, change) {
 
 ---
 
-### `0.1.0` — July 13, 2016
+### `0.1` — July 13, 2016
 
 :tada:
